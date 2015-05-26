@@ -1,0 +1,33 @@
+td
+{
+width:100px;
+height:100px;
+border:1px silver solid;
+text-align:center;
+font-size:80px;
+}
+#red
+{
+color:red;
+}
+#blue
+{
+color:blue;
+}
+table tr:nth-child(odd) td:nth-child(even) {
+  background: #808080;
+}
+table tr:nth-child(even) td:nth-child(odd) {
+  background: #808080;
+}
+.chosen
+{
+color:red;
+}
+td .capturedPieceBlock
+{
+	background: red;
+	text-align:center;
+	font-size:80px;
+}
+

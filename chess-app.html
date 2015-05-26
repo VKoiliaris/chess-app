@@ -1,0 +1,100 @@
+<head>
+  <title>chess-app</title>
+</head>
+
+<body>
+	<form class="new-player">
+		<input type="text" name="text" placeholder="Players Name" />
+	</form>
+
+	<ul>
+		{{#each players}}
+			{{>player}}
+		{{/each}}
+	</ul>
+	<table class = "capturedPiecesRow">
+
+			{{#each whiteCaptured}}
+				{{> captured}}
+			{{/each}}
+
+	</table>
+
+	<table class = "board">
+		<tr>
+			{{#each row8}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row7}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row6}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row5}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row4}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row3}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row2}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+		<tr>
+			{{#each row1}}
+     	 	  {{> square}}
+     	   {{/each}}
+		</tr>
+	</table>
+
+	<table class = "capturedPiecesRow">
+
+			{{#each blackCaptured}}
+				{{> captured}}
+			{{/each}}
+
+	</table>
+</body>
+
+
+<template name="square">
+	<td class="{{#if isOccupied}}occupied {{#if isChosen}} chosen{{/if}} {{else}}vacant{{/if}} ">
+		{{#if isOccupied}}
+			{{piece.pieceImage}}
+			{{#if promotable}}
+			{{/if}}
+		{{/if}}
+
+
+	</td>
+</template>
+
+<template name="captured">
+	<td class = "capturedPieceBlock">
+		{{this.pieceImage}}
+	</td>
+</template>
+
+<template name= "player">
+	<li>
+		Player Name: <strong>{{this.name}}</strong>
+		Side: <strong>{{this.side}}</strong>
+	</li>
+</template>
+
