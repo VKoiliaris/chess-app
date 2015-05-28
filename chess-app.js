@@ -6,7 +6,6 @@ var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
 
 // the chessboard array, will be used for legal movement prior to changing the DB
 var chessBoard = [
-
   ['wr', 'wkn', 'wb', 'wq', 'wk', 'wb', 'wkn', 'wr'],
   ['wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp', 'wp'],
   ['empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty', 'empty'],
@@ -113,7 +112,6 @@ chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPo
         startingRow++;
       }
       line.push(chessBoard[column][startingRow]);
-
     }
     blocked = (!line.empty());
   }else if (kindOfMovement === 'diagonalRising'){// diagonal rising is [1,1], [2,2]....
@@ -150,9 +148,7 @@ chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPo
     blocked = (!line.empty());
   }
     return blocked;
-
 };
-
 // pieces movements functions
 chessLogic.wpMove = function(oldPosition, newPosition){// i separate the pawns movement white and black for convinience
   // here we save in teporary variables the values we will need for the comparisons
@@ -603,12 +599,7 @@ if (Meteor.isClient) {
       isChosen: function(){ // we check which square is the chosen one by comparing its position to the piecechosen position
         return (this.position === pieceChosen.pPosition);
       }
-  //    promotable: function(){ // nothing yet
-  //      console.log((this.piece.symbol.slice(1,0) === 'p') && ((this.position.slice(0,1) === '1') || (this.position.slice(0,1) === '8')));
-  //      return ((this.piece.symbol.slice(1,0) === 'p') && ((this.position.slice(0,1) === '1') || (this.position.slice(0,1) === '8')));
-  //    }
   });
-
   Template.body.events({
     "submit .new-player": function (event) {
       // This function is called when the new player form is submitted
@@ -627,7 +618,6 @@ if (Meteor.isClient) {
       return false;
     },
   });
-
   Template.square.events({
     'click .occupied' : function (event) {
       var white = pieceChosen.white; // temporarily save the color of the piece
@@ -657,7 +647,6 @@ if (Meteor.isClient) {
 
       }
     },
-
     'click .vacant' : function (event){ // if we click on a vacent square
       var white = pieceChosen.white; // temporarily save the color of the piece
       Meteor.call('whoseTurn'); // again we run to check the turn
@@ -673,20 +662,16 @@ if (Meteor.isClient) {
     }
   });
 }
-
 // ... Server side
-
 if (Meteor.isServer) {
   Meteor.startup(function () {
     // code to run on server at startup
   });
 }
-
 // ... methods
-
 Meteor.methods({
 
-  init: function(){ // we initiate the app
+  initializeBoard: function(){ // we initiate the app
     Squares.remove({}); // remove the old objects in the DB
     blackCapturedPieces = []; // we declare the variables we will want
     whiteCapturedPieces = [];
@@ -854,7 +839,13 @@ Meteor.methods({
         }
       }
     }
+  },
+
+  // the mothod that starts the app
+  init: function(){
+    Meteor.call('initializeBoard');
+    Meteor.call('populateBoard', chess);
   }
 });
+
 Meteor.call('init');
-Meteor.call('populateBoard', chess);
