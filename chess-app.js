@@ -19,33 +19,33 @@ var chessBoard = [
 var chessLogic = {};
 // return the correct piece obj based on the string arguement
 chessLogic.pieceAssignment = function (currentPieceSymbol, currentPosition){
-  var piece;
+  var chessPiece; // function(smbl, color, position, image, fMove, )
   if(currentPieceSymbol === 'wr'){
-    piece = wr(currentPosition);
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2656', true);
   }else if(currentPieceSymbol === 'wkn'){
-    piece = wkn(currentPosition);
-  }else if(currentPieceSymbol === 'wb'){
-    piece = wb(currentPosition);
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2658', null);
+  }else if(currentPieceSymbol === 'wb'){null
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2657', null);
   }else if(currentPieceSymbol === 'wq'){
-    piece = wq(currentPosition);
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2655', null);
   }else if(currentPieceSymbol === 'wk'){
-    piece = wk(currentPosition);
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2654', true);
   }else if(currentPieceSymbol === 'wp'){
-    piece = wp(currentPosition);
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2659', null);
   }else if(currentPieceSymbol === 'bp'){
-    piece = bp(currentPosition);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265F', null);
   }else if(currentPieceSymbol === 'br'){
-    piece = br(currentPosition);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265C', true);
   }else if(currentPieceSymbol === 'bkn'){
-    piece = bkn(currentPosition);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265E', null);
   }else if(currentPieceSymbol === 'bb'){
-    piece = bb(currentPosition);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265D', null);
   }else if(currentPieceSymbol === 'bq'){
-    piece = bq(currentPosition);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265B', null);
   }else if(currentPieceSymbol === 'bk'){
-    piece = bk(currentPosition);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265A', true);
   }
-  return piece;
+  return chessPiece;
 };
 // convert the chess syntax to table iterators
 chessLogic.convert = function(position){
@@ -416,121 +416,16 @@ var pieceChosenCon = function(){
 };
 
 // constructors for all the pieces
-var wr= function(position){
+var piece = function(smbl, color, position, image, fMove){
   return {
-    symbol: 'wr',
-    white: true,
+    symbol: smbl,
+    white: color,
     pPosition: position,
-    pieceImage: '\u2656',
-    firstMove: true
+    pieceImage: image,
+    firstMove: fMove
   };
 };
 
-var wkn= function(position){
-  return {
-    symbol: 'wkn',
-    white: true,
-    pPosition: position,
-    pieceImage: '\u2658'
-  };
-};
-
-var wb= function(position){
-  return {
-    symbol: 'wb',
-    white: true,
-    pPosition: position,
-    pieceImage: '\u2657'
-   };
-};
-
-var wq= function(position){
-  return {
-    symbol: 'wq',
-    white: true,
-    pPosition: position,
-    pieceImage: '\u2655',
-    threatened: false
-  };
-};
-
-var wk= function(position){
-  return {
-    symbol: 'wk',
-    white: true,
-    pPosition: position,
-    pieceImage: '\u2654',
-    threatened: false,
-    firstMove: true
-  };
-};
-
-var wp= function(position){
-  return {
-    symbol: 'wp',
-    white: true,
-    pPosition: position,
-    pieceImage: '\u2659'
-  };
-};
-
-var bp= function(position){
-  return {
-    symbol: 'bp',
-    white: false,
-    pPosition: position,
-    pieceImage: '\u265F'
-  };
-};
-
-var br= function(position){
-  return {
-    symbol: 'br',
-    white: false,
-    pPosition: position,
-    pieceImage: '\u265C',
-    firstMove: true
-  };
-};
-
-var bkn= function(position){
-  return {
-    symbol: 'bkn',
-    white: false,
-    pPosition: position,
-    pieceImage: '\u265E'
-  };
-};
-
-var bb= function(position){
-  return {
-    symbol: 'bb',
-    white: false,
-    pPosition: position,
-    pieceImage: '\u265D'
-  };
-};
-
-var bq= function(position){
-  return {
-    symbol: 'bq',
-    white: false,
-    pPosition: position,
-    pieceImage: '\u265B',
-    threatened: false
-  };
-};
-
-var bk= function(position){
-  return {
-    symbol: 'bk',
-    white: false,
-    pPosition: position,
-    pieceImage: '\u265A',
-    threatened: false,
-    firstMove: true
-  };
-};
 // client side
 if (Meteor.isClient) {
   // setting up the white captured and black captured
