@@ -31,15 +31,15 @@ chessLogic.pieceAssignment = function (currentPieceSymbol, currentPosition){
   }else if(currentPieceSymbol === 'wk'){
     chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2654', true);
   }else if(currentPieceSymbol === 'wp'){
-    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2659', null);
+    chessPiece = piece(currentPieceSymbol, true, currentPosition, '\u2659', true);
   }else if(currentPieceSymbol === 'bp'){
-    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265F', null);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265F', true);
   }else if(currentPieceSymbol === 'br'){
     chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265C', true);
   }else if(currentPieceSymbol === 'bkn'){
     chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265E', null);
   }else if(currentPieceSymbol === 'bb'){
-    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265D', null);
+    chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265D', true);
   }else if(currentPieceSymbol === 'bq'){
     chessPiece = piece(currentPieceSymbol, false, currentPosition, '\u265B', null);
   }else if(currentPieceSymbol === 'bk'){
@@ -150,6 +150,7 @@ chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPo
     return blocked;
 };
 // pieces movements functions
+/*
 chessLogic.wpMove = function(oldPosition, newPosition){// i separate the pawns movement white and black for convinience
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
@@ -172,7 +173,35 @@ chessLogic.wpMove = function(oldPosition, newPosition){// i separate the pawns m
   }
   return legal;
 };
+*/
+chessLogic.pMove = function(white, oldPosition, newPosition, firstMove){// i separate the pawns movement white and black for convinience
+  // here we save in teporary variables the values we will need for the comparisons
+  var legal = false;
+  var oldPositionConverted = chessLogic.convert(oldPosition);
+  var oldColumn = oldPositionConverted[0];
+  var oldRow = oldPositionConverted[1];
+  var newPositionConverted = chessLogic.convert(newPosition);
+  var newColumn = newPositionConverted[0];
+  var newRow = newPositionConverted[1];
+  var increament = 1;
+  if (!white){
+    increament = -1;
+  }
+  if ((chessBoard[newColumn][newRow] === 'empty')&&(oldRow === newRow)){// if the new position is empty
+    if (newColumn === (oldColumn + increament)){ // new position is the next square forward
+      legal = true;
+    }else if ((firstMove) && (newColumn === oldColumn + (2 * increament)) && (chessBoard[oldColumn + increament][oldRow] === 'empty')){// if we are on the initial position and we jump 2 squares
+      legal = true;
+    }
+  }else if (chessBoard[newColumn][newRow].slice(0,1) !== chessBoard[oldColumn][oldRow].slice(0,1)){// if the square is occupied by a back piece
+    if ((newColumn === (oldColumn + increament)) && ((newRow ===(oldRow +1)) || (newRow ===(oldRow -1)))){
+      legal = true;
+    }
+  }
+  return legal;
+};
 
+/*
 chessLogic.bpMove = function(oldPosition, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
@@ -194,7 +223,7 @@ chessLogic.bpMove = function(oldPosition, newPosition){
     }
   }
   return legal;
-};
+};*/
 
 chessLogic.rMove = function(oldPosition, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
@@ -221,14 +250,10 @@ chessLogic.knMove = function(oldPosition, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
   var oldPositionConverted = chessLogic.convert(oldPosition);
-  var oldColumn = oldPositionConverted[0];
-  var oldRow = oldPositionConverted[1];
   var newPositionConverted = chessLogic.convert(newPosition);
-  var newColumn = newPositionConverted[0];
-  var newRow = newPositionConverted[1];
-  if ((Math.abs(newColumn - oldColumn) === 2) && (Math.abs(newRow - oldRow) === 1)){
-    legal = true;
-  }else if ((Math.abs(newRow - oldRow) === 2) && (Math.abs(newColumn - oldColumn) === 1)){
+  var columnDif = Math.abs(oldPositionConverted[0] - newPositionConverted[0]);
+  var rowDif =  Math.abs(oldPositionConverted[1] - newPositionConverted[1]);
+  if ((columnDif + rowDif === 3) && (columnDif < 3) && (rowDif < 3)){
     legal = true;
   }
   return legal;
@@ -600,11 +625,17 @@ Meteor.methods({
       var legal = false;
       var legalAfterKingCheck = false;
       var symbol = piece.symbol;
+      if ((symbol === 'wp') || (symbol === 'bp')){
+        legal = logic.pMove(piece.white, piece.pPosition, newPosition, piece.firstMove);
+      }
+/*
       if (symbol === 'wp'){
         legal = logic.wpMove(piece.pPosition, newPosition);
       }else if (symbol === 'bp'){
         legal = logic.bpMove(piece.pPosition, newPosition);
-      }else if ((symbol === 'wr') || (symbol === 'br')){
+      }
+*/
+      else if ((symbol === 'wr') || (symbol === 'br')){
         legal = logic.rMove(piece.pPosition, newPosition);
       }else if ((symbol === 'wkn') || (symbol === 'bkn')){
         legal = logic.knMove(piece.pPosition, newPosition);
