@@ -3,6 +3,12 @@ Squares = new Mongo.Collection("squares");
 
 // letters arrays is used as a tool to convert the chess positions to a two dimensional array
 var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ];
+var castlingStates = {
+  whiteLeft : ['wr', 'empty', 'empty', 'empty', 'wk'],
+  whiteRight : ['wk', 'empty', 'empty', 'wr'],
+  blackLeft : ['br', 'empty', 'empty', 'empty', 'bk'],
+  blackRight : ['bk', 'empty', 'empty', 'br'],
+};
 
 // the chessboard array, will be used for legal movement prior to changing the DB
 var chessBoard = [
@@ -15,6 +21,7 @@ var chessBoard = [
   ['bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp', 'bp'],
   ['br', 'bkn', 'bb', 'bq', 'bk', 'bb', 'bkn', 'br']
 ];
+
 // obj that will have the functions for the moves of the pieces
 var chessLogic = {};
 // return the correct piece obj based on the string arguement
@@ -75,7 +82,7 @@ chessLogic.restore = function(oldPosition, newPosition, pieceReplaced){
 };
 // blocked movement is a method that is invoked by the movement of pieces that can move on a line, but not over others
 // and it returns whether the movement is obstructed
-chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPosition, kingThreat){
+chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPosition){
   var blocked = true;
   var line= []; // here we save the array strings we will check for vacancy
   line.empty = function include() { // with this funciton we make the check
@@ -86,39 +93,55 @@ chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPo
     }
     return true;
   };
+  var startingColumn = startingPosition[0];
+  var finishColumn = finishPosition[0];
+  var startingRow = startingPosition[1];
+  var finishRow = finishPosition[1];
   // now depending on the movement line type we separate them,
   // and in each if we iterate through the strings and add them to line[]
+  var crossMoves = function(start, finish, columnOrRow){
+      while(start !== finish) {
+      if (start > finish){
+        start--;
+      }else{
+        start++;
+      }
+
+      if (columnOrRow){
+        line.push(chessBoard[start][startingRow]);
+      }else{
+        line.push(chessBoard[startingColumn][start]);
+      }
+
+    }
+  };
   if (kindOfMovement === "vertical"){
-    var row = startingPosition[1];
-    var startingColumn = startingPosition[0];
-    var finishColumn = finishPosition[0];
+    crossMoves(startingColumn, finishColumn, true);
+  /*
     while(startingColumn !== finishColumn) {
       if (startingColumn > finishColumn){
         startingColumn--;
       }else{
         startingColumn++;
       }
-      line.push(chessBoard[startingColumn][row]);
+      line.push(chessBoard[startingColumn][startingRow]);
     }
+    */
     blocked = (!line.empty());
   }else if (kindOfMovement === 'horizontal'){
-    var column = startingPosition[0];
-    var startingRow = startingPosition[1];
-    var finishRow = finishPosition[1];
+    crossMoves(startingRow, finishRow, false);
+    /*
     while(startingRow !== finishRow) {
       if (startingRow > finishRow){
         startingRow--;
       }else{
         startingRow++;
       }
-      line.push(chessBoard[column][startingRow]);
+      line.push(chessBoard[startingColumn][startingRow]);
     }
+    */
     blocked = (!line.empty());
   }else if (kindOfMovement === 'diagonalRising'){// diagonal rising is [1,1], [2,2]....
-    var startingColumn = startingPosition[0];
-    var finishColumn = finishPosition[0];
-    var startingRow = startingPosition[1];
-    var finishRow = finishPosition[1];
     while(startingRow !== finishRow) {
       if (startingRow > finishRow){
         startingRow--;
@@ -131,10 +154,6 @@ chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPo
     }
     blocked = (!line.empty());
   }else if  (kindOfMovement === 'diagonalFalling'){// diagonal falling is [7,1], [6,2]....
-    var startingColumn = startingPosition[0];
-    var finishColumn = finishPosition[0];
-    var startingRow = startingPosition[1];
-    var finishRow = finishPosition[1];
     while(startingRow !== finishRow) {
       if (startingRow > finishRow){
         startingRow--;
@@ -145,6 +164,7 @@ chessLogic.blockedMovement = function(kindOfMovement, startingPosition, finishPo
       }
       line.push(chessBoard[startingColumn][startingRow]);
     }
+    //blocked = (!_.every(line, function(string){return string === 'empty'}));
     blocked = (!line.empty());
   }
     return blocked;
@@ -196,7 +216,6 @@ chessLogic.rMove = function(oldPosition, newPosition){
   }
   return legal;
 };
-
 chessLogic.knMove = function(oldPosition, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
@@ -209,7 +228,6 @@ chessLogic.knMove = function(oldPosition, newPosition){
   }
   return legal;
 };
-
 chessLogic.bMove = function(oldPosition, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
@@ -230,7 +248,6 @@ chessLogic.bMove = function(oldPosition, newPosition){
   }
   return legal;
 };
-
 chessLogic.qMove = function(oldPosition, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
@@ -259,7 +276,6 @@ chessLogic.qMove = function(oldPosition, newPosition){
   }
   return legal;
 };
-
 chessLogic.kMove = function(oldPosition, white, firstMove, newPosition){
   // here we save in teporary variables the values we will need for the comparisons
   var legal = false;
@@ -311,12 +327,7 @@ chessLogic.kThreatened = function(piece, newPosition){
   var enemyBishop;
   var enemyKing;
   var threatened = false;
-  var threatenedByPawn = false;
-  var threatenedByKing = false;
-  var threatenedByQueen = false;
-  var threatenedByKnight = [];
-  var threatenedByRook = [];
-  var threatenedByBishop = [];
+  var threateningPieces = [];
   var white = piece.white;
   if (white){
     king = 'wk';
@@ -349,36 +360,37 @@ chessLogic.kThreatened = function(piece, newPosition){
     for (var j = 0; j < 8; j ++){
       if (chessBoard[i][j] === enemyKing){
         convertedEnemyPosition = (i+1) +  letters[j];
-        threatenedByKing = chessLogic.kMove(convertedEnemyPosition, white, false, convertedKingPosition);
+        threateningPieces.push(chessLogic.kMove(convertedEnemyPosition, white, false, convertedKingPosition));
       }else if (chessBoard[i][j] === enemyQueen){
         convertedEnemyPosition = (i+1) +  letters[j];
-        threatenedByQueen = chessLogic.qMove(convertedEnemyPosition, convertedKingPosition);
+        threateningPieces.push(chessLogic.qMove(convertedEnemyPosition, convertedKingPosition));
       }else if (chessBoard[i][j] === enemyKnight){
         convertedEnemyPosition = (i+1) +  letters[j];
-        threatenedByKnight.push(chessLogic.knMove(convertedEnemyPosition, convertedKingPosition));
+        threateningPieces.push(chessLogic.knMove(convertedEnemyPosition, convertedKingPosition));
       }else if (chessBoard[i][j] === enemyRook){
         convertedEnemyPosition = (i+1) +  letters[j];
-        threatenedByRook.push(chessLogic.rMove(convertedEnemyPosition, convertedKingPosition));
+        threateningPieces.push(chessLogic.rMove(convertedEnemyPosition, convertedKingPosition));
       }else if (chessBoard[i][j] === enemyBishop){
         convertedEnemyPosition = (i+1) +  letters[j];
-        threatenedByBishop.push(chessLogic.bMove(convertedEnemyPosition, convertedKingPosition));
+        threateningPieces.push(chessLogic.bMove(convertedEnemyPosition, convertedKingPosition));
       }
     }
   }
   // pawns threatening the king
   if (white){
     if ((chessBoard[kingRow+1][kingColumn-1] === 'bp') || (chessBoard[kingRow+1][kingColumn+1] === 'bp')){
-      threatenedByPawn = true;
+      threateningPieces.push(true);
     }
   }else if (!white){
     if ((chessBoard[kingRow-1][kingColumn-1] === 'wp') || (chessBoard[kingRow-1][kingColumn+1] === 'wp')){
-      threatenedByPawn = true;
+      threateningPieces.push(true);
     }
   }
-  if (threatenedByPawn || threatenedByBishop[0] || threatenedByBishop[1] || threatenedByRook[0] || threatenedByRook[1] || threatenedByKnight[0] || threatenedByKnight[1] || threatenedByQueen || threatenedByKing){
+  console.log(threateningPieces);
+  var exists =_.indexOf(threateningPieces, true);
+  if (exists !== -1){
     threatened = true;
   }
-  console.log ("pawn threatens: ", threatenedByPawn, "bishop threatens: ", threatenedByBishop, "rook threatens: ", threatenedByRook, "knight threatens: ", threatenedByKnight, "queen threatens: ", threatenedByQueen, "king Threatens: ", threatenedByKing)
   chessLogic.restore(newPosition, piece.pPosition, pieceEaten);
   return threatened;
 };
@@ -390,7 +402,6 @@ var pieceChosenCon = function(){
     pPosition : null
   };
 };
-
 // constructors for all the pieces
 var piece = function(smbl, color, position, image, fMove){
   return {
@@ -401,7 +412,6 @@ var piece = function(smbl, color, position, image, fMove){
     firstMove: fMove
   };
 };
-
 // client side
 if (Meteor.isClient) {
   // setting up the white captured and black captured
@@ -490,7 +500,7 @@ if (Meteor.isClient) {
     },
   });
   Template.square.events({
-    'click .occupied' : function (event) {
+    'click .occupied' : function () {
       var white = pieceChosen.white; // temporarily save the color of the piece
       Meteor.call('whoseTurn'); // we check the turn
       if (pieceChosen.symbol !==null){ // if there is a piece chosen
@@ -518,7 +528,7 @@ if (Meteor.isClient) {
 
       }
     },
-    'click .vacant' : function (event){ // if we click on a vacent square
+    'click .vacant' : function (){ // if we click on a vacent square
       var white = pieceChosen.white; // temporarily save the color of the piece
       Meteor.call('whoseTurn'); // again we run to check the turn
       if (whiteTurn !== white){ // if it is not, we simply toggle the chosen piece with null
@@ -541,7 +551,6 @@ if (Meteor.isServer) {
 }
 // ... methods
 Meteor.methods({
-
   initializeBoard: function(){ // we initiate the app
     Squares.remove({}); // remove the old objects in the DB
     blackCapturedPieces = []; // we declare the variables we will want
@@ -635,7 +644,6 @@ Meteor.methods({
       logic.update(oldPosition, newPosition);
       if (!castling){
         pieceChosen = {symbol: null, pPosition: null}; // set the pieceChosen to null after capturing, if it is castling that calls it, do not change the chosen piece
-
         turn++;
       }
     }
@@ -643,44 +651,27 @@ Meteor.methods({
   },
    toggleChosen : function(squarePosition, pieceOnSquare){ // here we toggle the chosen value of square
     if (pieceChosen.pPosition === null){ // if there is no piece already chosen the clicked piece gets chosen
-      Squares.update({
-        position: squarePosition
-      },
-      {
-        $set:{
-         chosen: true
-        }
-      });
+      Meteor.call('toggle', true, squarePosition, pieceOnSquare);
       pieceChosen = pieceOnSquare;
     }else if (pieceChosen.pPosition === pieceOnSquare.pPosition){ // if we have a piece chosen and we click on it again we "unchose" it
-      Squares.update({
-        position: squarePosition
-      },
-      {
-        $set:{
-         chosen: false
-        }
-      });
+    Meteor.call('toggle', false, squarePosition, {symbol: null, pPosition: null});
       pieceChosen = {symbol: null, pPosition: null};
     }else { // finaly if we choose another piece than the one we have chosen we change the chosen to the new
-      Squares.update({
-        position: pieceChosen.pPosition
-      },
-      {
-        $set:{
-         chosen: false
-        }
-      });
-      Squares.update({
-        position: squarePosition
-      },
-      {
-        $set:{
-         chosen: true
-        }
-      });
-        pieceChosen = pieceOnSquare;
+      Meteor.call('toggle', false, pieceChosen.pPosition, {symbol: null, pPosition: null});
+      Meteor.call('toggle', true, squarePosition, pieceOnSquare);
     }
+  },
+
+  toggle : function(boolean, position, piece){
+      Squares.update({
+        position: position
+      },
+      {
+        $set:{
+         chosen: boolean
+        }
+      });
+      pieceChosen = piece;
   },
   // function called after the squares are created and used to populate them with the pieces
   populateBoard: function(chess){
@@ -707,8 +698,7 @@ Meteor.methods({
       }
     }
   },
-
-  // the mothod that starts the app
+  // the method that starts the app
   init: function(){
     Meteor.call('initializeBoard');
     Meteor.call('populateBoard', chess);

@@ -1,0 +1,13 @@
+1. Changed the pieces objects, to a single piece, with a constructor with arguements for all properties.
+
+2. Unified the two different pawn move functions (wpMove, bpMove) to a single one and added a color arguement to make the
+differentiation.
+
+3. Changed the toggleChosen and it now calls a new toggle method for the update.
+
+4.Added an array in the threatened pieces
+
+
+
+
+
